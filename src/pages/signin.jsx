@@ -1,33 +1,21 @@
-import { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { postSignin } from '@/api/auth';
-import { instance } from '@/api/instance';
-import AuthForm from '@/components/auth/Form';
-import { TOKEN_KEY } from '@/constants/auth';
-import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '@/constants/message';
+import { postSignin } from '@/apis/auth';
+import AuthForm from '@/components/auth/AuthForm';
 import { PATH } from '@/constants/path';
-import useCredentials from '@/hooks/useInput';
-import useToast from '@/hooks/useToast';
-import { CredentialType, credentialValue } from '@/types/auth';
-import { setToken } from '@/utils/token';
+import useInput from '@/hooks/useInput';
 
 const SigninPage = () => {
-  const { value: credentials, handleValue: handleCredentials } =
-    useCredentials<CredentialType>(credentialValue);
+  const { value: credentials, onChange } = useInput({
+    email: '',
+    password: '',
+  });
   const navigate = useNavigate();
-  const { openToast } = useToast();
 
   const handleSignin = () => {
-    postSignin(credentials)
-      .then(({ data }) => {
-        setToken(TOKEN_KEY, data.access_token);
-        instance.defaults.headers['Authorization'] = `Bearer ${data.access_token}`;
-
-        openToast(SUCCESS_MESSAGE.signin, 'success');
-        navigate(PATH.TODO, { replace: true });
-      })
-      .catch(() => openToast(ERROR_MESSAGE.signin, 'error'));
+    postSignin(credentials).then(() => {
+      navigate(PATH.TODO, { replace: true });
+    });
   };
 
   const onSubmit = (e) => {
@@ -42,7 +30,7 @@ const SigninPage = () => {
         title="로그인"
         email={credentials.email}
         password={credentials.password}
-        handleInput={handleCredentials}
+        onChange={onChange}
         onSubmit={onSubmit}
         testId="signin-button"
       />
